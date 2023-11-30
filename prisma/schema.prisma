@@ -11,16 +11,39 @@ datasource db {
     relationMode = "prisma"
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
+// model Post {
+//     id        Int      @id @default(autoincrement())
+//     name      String
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     createdBy   User   @relation(fields: [createdById], references: [id])
+//     createdById String
+
+//     @@index([id])
+// }
+
+model Scribe {
+    id        String   @id @default(uuid())
+    userId    String
+    content   String
     createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+    user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    likes Like[]
 
-    @@index([id])
+    @@index([userId])
+}
+
+model Like {
+    userId   String
+    scribeId String
+    user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    scribe   Scribe @relation(fields: [scribeId], references: [id], onDelete: Cascade)
+
+    @@id([userId, scribeId])
+    @@index([userId])
+    @@index([scribeId])
 }
 
 // Necessary for Next auth
@@ -53,6 +76,18 @@ model Session {
     @@index([userId])
 }
 
+model Post {
+    id        Int      @id @default(autoincrement())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([id])
+}
+
 model User {
     id            String    @id @default(cuid())
     name          String?
@@ -61,7 +96,14 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+
+    //Not auth
+    scribes Scribe[]
+    likes   Like[]
+
+    followers User[] @relation(name: "Followers")
+    follows   User[] @relation(name: "Followers")
+    Post      Post[]
 }
 
 model VerificationToken {
